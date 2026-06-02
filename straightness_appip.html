@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>真直度グラフ計算アプリ</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#fff;
+      --text:#1f2937;
+      --sub:#6b7280;
+      --line:#dbe3ee;
+      --primary:#2563eb;
+      --primary2:#1d4ed8;
+      --raw:#9ca3af;
+      --danger:#dc2626;
+      --shadow:0 10px 24px rgba(37,99,235,.08);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
+      background:linear-gradient(180deg,#eef4ff,#f8fbff);
+      color:var(--text);
+    }
+
+    .app{
+      max-width:920px;
+      margin:0 auto;
+      padding:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    h1{margin:0;font-size:28px}
+    h2{margin:0 0 6px;font-size:22px}
+    h3{margin:0 0 6px;font-size:18px}
+
+    .sub{
+      color:var(--sub);
+      line-height:1.5;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid #e8eef6;
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
+    }
+
+    .screen{display:none}
+    .screen.active{display:block}
+
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .field{
+      margin-bottom:16px;
+    }
+
+    .field label{
+      display:block;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .inputWrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:0 14px;
+      background:#fff;
+    }
+
+    .inputWrap input{
+      flex:1;
+      min-width:0;
+      border:none;
+      outline:none;
+      background:transparent;
+      padding:14px 0;
+      font-size:18px;
+      color:var(--text);
+      -webkit-appearance:none;
+      appearance:none;
+    }
+
+    .unit{
+      color:var(--sub);
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .seg{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    .seg button,
+    .btn,
+    .btnGhost{
+      border:none;
+      border-radius:14px;
+      padding:14px 16px;
+      font-weight:700;
+      cursor:pointer;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+
+    .seg button{
+      background:#eaf1ff;
+      color:#25447d;
+    }
+
+    .seg button.active{
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .btn{
+      width:100%;
+      background:linear-gradient(135deg,var(--primary),var(--primary2));
+      color:#fff;
+      box-shadow:0 8px 20px rgba(37,99,235,.22);
+    }
+
+    .btnGhost{
+      background:#edf2f8;
+      color:#244176;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .mini{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .slopeList{
+      display:grid;
+      gap:10px;
+      margin:14px 0 18px;
+    }
+
+    .slopeRow{
+      display:grid;
+      grid-template-columns:72px 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+
+    .slopeRow input{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:17px;
+      color:var(--text);
+      -webkit-appearance:none;
+      appearance:none;
+    }
+
+    .invalid{
+      border-color:#fecaca !important;
+      background:#fff1f2 !important;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:1.15fr 1fr 1fr;
+      gap:12px;
+    }
+
+    .stat{
+      min-height:110px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .stat.primary{
+      background:linear-gradient(135deg,#2563eb,#5b8cff);
+      color:#fff;
+    }
+
+    .stat .label{
+      font-size:14px;
+      opacity:.9;
+    }
+
+    .stat .value{
+      margin-top:8px;
+      font-size:32px;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .stat .value.small{
+      font-size:18px;
+    }
+
+    canvas{
+      width:100%;
+      height:300px;
+      background:#fff;
+      border-radius:14px;
+      display:block;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+
+    th,td{
+      padding:10px 8px;
+      border-bottom:1px solid #ebf0f8;
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    th:first-child, td:first-child{
+      text-align:center;
+    }
+
+    .scroll{
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:20px;
+      transform:translateX(-50%) translateY(20px);
+      background:rgba(17,24,39,.94);
+      color:#fff;
+      padding:12px 16px;
+      border-radius:999px;
+      opacity:0;
+      pointer-events:none;
+      transition:.25s;
+      z-index:100;
+      max-width:90vw;
+      text-align:center;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .legend{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      color:var(--sub);
+      font-size:14px;
+    }
+
+    .dot{
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:99px;
+      margin-right:6px;
+    }
+
+    .dot.raw{background:var(--raw)}
+    .dot.corrected{background:var(--primary)}
+
+    @media (max-width:720px){
+      h1{font-size:24px}
+      .grid2,.stats{grid-template-columns:1fr}
+      .slopeRow{grid-template-columns:62px 1fr auto}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div>
+        <div class="sub" style="font-weight:700;color:#2563eb;">Straightness App</div>
+        <h1>真直度グラフ計算</h1>
+      </div>
+      <button class="btnGhost" id="resetBtn" type="button">初期化</button>
+    </div>
+
+    <section id="screen1" class="screen active">
+      <div class="card">
+        <h2>測定条件</h2>
+        <p class="sub">固定ピッチごとの傾き値（μm/m）を入力し、真直度グラフと最大真直度を計算します。</p>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="pitch">ピッチ</label>
+            <div class="inputWrap" id="pitchWrap">
+              <input id="pitch" type="text" inputmode="decimal" autocomplete="off" placeholder="100">
+              <div class="unit">mm</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="count">測定区間数</label>
+            <div class="inputWrap" id="countWrap">
+              <input id="count" type="text" inputmode="numeric" autocomplete="off" placeholder="10">
+              <div class="unit">区間</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>基準線補正方式</label>
+          <div class="seg">
+            <button id="methodEndpoint" class="active" data-method="endpoint" type="button">端点法</button>
+            <button id="methodLS" data-method="leastSquares" type="button">最小二乗法</button>
+          </div>
+        </div>
+
+        <button class="btn" id="goInput" type="button">傾きを入力する</button>
+      </div>
+    </section>
+
+    <section id="screen2" class="screen">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>傾き入力</h2>
+            <div class="sub" id="summaryText"></div>
+          </div>
+          <button class="btnGhost" id="back1" type="button">条件へ戻る</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="sub">各区間の傾き値を入力してください。</div>
+          <div class="mini">
+            <button class="btnGhost" id="fillZero" type="button">0で埋める</button>
+            <button class="btnGhost" id="clearVals" type="button">入力クリア</button>
+          </div>
+        </div>
+
+        <div class="slopeList" id="slopeList"></div>
+        <button class="btn" id="calcBtn" type="button">計算する</button>
+      </div>
+    </section>
+
+    <section id="screen3" class="screen">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>計算結果</h2>
+            <div class="sub" id="resultMethod"></div>
+          </div>
+          <div class="mini">
+            <button class="btnGhost" id="back2" type="button">入力修正</button>
+            <button class="btnGhost" id="recalcBtn" type="button">再計算</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="card stat primary">
+          <div class="label">最大真直度</div>
+          <div class="value" id="straightnessValue">-</div>
+        </div>
+        <div class="card stat">
+          <div class="label">最高点</div>
+          <div class="value small" id="maxPointValue">-</div>
+        </div>
+        <div class="card stat">
+          <div class="label">最低点</div>
+          <div class="value small" id="minPointValue">-</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <h3>真直度グラフ</h3>
+            <div class="sub">横軸: 距離(mm) / 縦軸: 偏差(μm)</div>
+          </div>
+          <div class="legend">
+            <span><i class="dot raw"></i>補正前</span>
+            <span><i class="dot corrected"></i>補正後</span>
+          </div>
+        </div>
+        <canvas id="chart" width="800" height="300"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>計算テーブル</h3>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>点</th>
+                <th>距離(mm)</th>
+                <th>補正前(μm)</th>
+                <th>補正後(μm)</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      pitch: "",
+      count: "",
+      method: "endpoint",
+      slopes: [],
+      result: null
+    };
+
+    const $ = id => document.getElementById(id);
+
+    const screen1 = $("screen1");
+    const screen2 = $("screen2");
+    const screen3 = $("screen3");
+
+    const pitch = $("pitch");
+    const count = $("count");
+    const pitchWrap = $("pitchWrap");
+    const countWrap = $("countWrap");
+    const summaryText = $("summaryText");
+    const slopeList = $("slopeList");
+    const tableBody = $("tableBody");
+    const chart = $("chart");
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(()=>t.classList.remove("show"), 1800);
+    }
+
+    function show(screen){
+      [screen1,screen2,screen3].forEach(s=>s.classList.remove("active"));
+      screen.classList.add("active");
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
+    function methodLabel(){
+      return state.method === "leastSquares" ? "最小二乗法" : "端点法";
+    }
+
+    function syncMethodButtons(){
+      $("methodEndpoint").classList.toggle("active", state.method === "endpoint");
+      $("methodLS").classList.toggle("active", state.method === "leastSquares");
+    }
+
+    function saveLocal(){
+      try{
+        localStorage.setItem("straightness_app_state", JSON.stringify({
+          pitch: state.pitch,
+          count: state.count,
+          method: state.method,
+          slopes: state.slopes
+        }));
+      }catch(e){
+        // Safari private mode 等で失敗しても処理継続
+      }
+    }
+
+    function loadLocal(){
+      try{
+        const d = JSON.parse(localStorage.getItem("straightness_app_state") || "{}");
+        if(d.pitch !== undefined) state.pitch = d.pitch;
+        if(d.count !== undefined) state.count = d.count;
+        if(d.method) state.method = d.method;
+        if(Array.isArray(d.slopes)) state.slopes = d.slopes;
+      }catch(e){}
+    }
+
+    function normalizeNumberString(value, integerOnly){
+      if(value == null) return "";
+      let s = String(value).trim();
+
+      const map = {
+        "０":"0","１":"1","２":"2","３":"3","４":"4",
+        "５":"5","６":"6","７":"7","８":"8","９":"9",
+        "．":".","，":".","。":".",
+        "－":"-","ー":"-","−":"-","–":"-","—":"-"
+      };
+
+      s = s.replace(/[０-９．，。－ー−–—]/g, ch => map[ch] || ch);
+      s = s.replace(/\s+/g, "");
+      s = s.replace(/,/g, ".");
+      s = s.replace(/[^0-9.\-]/g, "");
+
+      const negative = s.startsWith("-") ? "-" : "";
+      s = negative + s.replace(/-/g, "");
+
+      const firstDot = s.indexOf(".");
+      if(firstDot !== -1){
+        s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, "");
+      }
+
+      if(integerOnly && s.includes(".")){
+        s = s.split(".")[0];
+      }
+
+      return s;
+    }
+
+    function parseSafeNumber(value, integerOnly){
+      const s = normalizeNumberString(value, integerOnly);
+      if(!s || s === "-" || s === "." || s === "-.") return NaN;
+      return Number(s);
+    }
+
+    function applyStateToInputs(){
+      pitch.value = state.pitch || "";
+      count.value = state.count || "";
+      syncMethodButtons();
+    }
+
+    function validateConditions(){
+      let ok = true;
+      pitchWrap.classList.remove("invalid");
+      countWrap.classList.remove("invalid");
+
+      const p = parseSafeNumber(pitch.value, false);
+      const c = parseSafeNumber(count.value, true);
+
+      if(!(p > 0)){
+        pitchWrap.classList.add("invalid");
+        ok = false;
+      }
+
+      if(!(c >= 1 && Number.isInteger(c))){
+        countWrap.classList.add("invalid");
+        ok = false;
+      }
+
+      if(!ok) toast("ピッチと区間数を正しく入力してください");
+      return ok;
+    }
+
+    function buildSlopeInputs(){
+      const c = parseSafeNumber(state.count, true);
+      if(!c || c < 1) return;
+
+      if(state.slopes.length !== c){
+        const arr = [];
+        for(let i=0;i<c;i++) arr.push(state.slopes[i] ?? "");
+        state.slopes = arr;
+      }
+
+      summaryText.textContent =
+        `ピッチ: ${state.pitch} mm / 区間数: ${state.count} / 補正方式: ${methodLabel()}`;
+
+      slopeList.innerHTML = "";
+
+      state.slopes.forEach((v,i)=>{
+        const row = document.createElement("div");
+        row.className = "slopeRow";
+        row.innerHTML = `
+          <div style="font-weight:700">区間${i+1}</div>
+          <input type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${v}">
+          <div class="unit">μm/m</div>
+        `;
+        const input = row.querySelector("input");
+        input.addEventListener("input", e=>{
+          state.slopes[i] = e.target.value;
+          saveLocal();
+        });
+        slopeList.appendChild(row);
+      });
+
+      saveLocal();
+    }
+
+    function getSlopeNumbers(){
+      const inputs = [...slopeList.querySelectorAll("input")];
+      const values = [];
+      let ok = true;
+
+      inputs.forEach(inp=>{
+        inp.classList.remove("invalid");
+        const v = parseSafeNumber(inp.value, false);
+        if(Number.isNaN(v)){
+          inp.classList.add("invalid");
+          ok = false;
+        }else{
+          inp.value = normalizeNumberString(inp.value, false);
+          values.push(v);
+        }
+      });
+
+      if(!ok){
+        toast("すべての区間に数値を入力してください");
+        return null;
+      }
+
+      return values;
+    }
+
+    function xPositions(count, pitchMm){
+      return Array.from({length: count + 1}, (_,i)=>i * pitchMm);
+    }
+
+    function integrateProfile(slopesUmPerM, pitchMm){
+      const profile = [0];
+      let z = 0;
+      for(const s of slopesUmPerM){
+        const delta = s * pitchMm / 1000.0;
+        z += delta;
+        profile.push(z);
+      }
+      return profile;
+    }
+
+    function endpointCorrection(profile, pitchMm){
+      const x = xPositions(profile.length - 1, pitchMm);
+      const x0 = x[0];
+      const xn = x[x.length - 1];
+      const z0 = profile[0];
+      const zn = profile[profile.length - 1];
+      const a = (zn - z0) / ((xn - x0) || 1);
+      return profile.map((z,i)=>z - (z0 + a * (x[i] - x0)));
+    }
+
+    function leastSquaresCorrection(profile, pitchMm){
+      const x = xPositions(profile.length - 1, pitchMm);
+      const n = profile.length;
+      let sumX=0, sumY=0, sumXY=0, sumX2=0;
+
+      for(let i=0;i<n;i++){
+        sumX += x[i];
+        sumY += profile[i];
+        sumXY += x[i] * profile[i];
+        sumX2 += x[i] * x[i];
+      }
+
+      const den = n * sumX2 - sumX * sumX;
+      const a = den === 0 ? 0 : (n * sumXY - sumX * sumY) / den;
+      const b = (sumY - a * sumX) / n;
+
+      return profile.map((z,i)=>z - (a * x[i] + b));
+    }
+
+    function summarize(corrected){
+      const max = Math.max(...corrected);
+      const min = Math.min(...corrected);
+      return {
+        max,
+        min,
+        maxIndex: corrected.indexOf(max),
+        minIndex: corrected.indexOf(min),
+        straightness: max - min
+      };
+    }
+
+    function r3(v){
+      return (Math.round(v * 1000) / 1000).toFixed(3);
+    }
+
+    function calculate(){
+      const slopes = getSlopeNumbers();
+      if(!slopes) return;
+
+      const pitchMm = parseSafeNumber(state.pitch, false);
+      const raw = integrateProfile(slopes, pitchMm);
+      const corrected = state.method === "leastSquares"
+        ? leastSquaresCorrection(raw, pitchMm)
+        : endpointCorrection(raw, pitchMm);
+
+      const x = xPositions(slopes.length, pitchMm);
+      const s = summarize(corrected);
+
+      state.result = {x, raw, corrected, s};
+      renderResult();
+      show(screen3);
+    }
+
+    function renderResult(){
+      const {x, raw, corrected, s} = state.result;
+
+      $("resultMethod").textContent = `補正方式: ${methodLabel()}`;
+      $("straightnessValue").textContent = `${r3(s.straightness)} μm`;
+      $("maxPointValue").textContent = `${r3(s.max)} μm @ ${r3(x[s.maxIndex])} mm`;
+      $("minPointValue").textContent = `${r3(s.min)} μm @ ${r3(x[s.minIndex])} mm`;
+
+      tableBody.innerHTML = x.map((dist,i)=>`
+        <tr>
+          <td>${i}</td>
+          <td>${r3(dist)}</td>
+          <td>${r3(raw[i])}</td>
+          <td>${r3(corrected[i])}</td>
+        </tr>
+      `).join("");
+
+      drawChart(chart, x, raw, corrected);
+    }
+
+    function drawChart(canvas, xVals, rawVals, corrVals){
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.max(320, Math.floor(rect.width || 800));
+      const h = 300;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,w,h);
+
+      const m = {l:56, r:18, t:18, b:36};
+      const pw = w - m.l - m.r;
+      const ph = h - m.t - m.b;
+
+      const allY = [...rawVals, ...corrVals];
+      let minY = Math.min(...allY);
+      let maxY = Math.max(...allY);
+
+      if(minY === maxY){
+        minY -= 1;
+        maxY += 1;
+      }
+
+      const pad = (maxY - minY) * 0.12;
+      minY -= pad;
+      maxY += pad;
+
+      const minX = Math.min(...xVals);
+      const maxX = Math.max(...xVals);
+
+      const xp = x => m.l + ((x - minX) / ((maxX - minX) || 1)) * pw;
+      const yp = y => m.t + (1 - (y - minY) / (maxY - minY)) * ph;
+
+      ctx.strokeStyle = "#e1e8f3";
+      ctx.lineWidth = 1;
+      for(let i=0;i<=4;i++){
+        const y = m.t + ph * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(m.l, y);
+        ctx.lineTo(m.l + pw, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#7a8799";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(m.l, m.t);
+      ctx.lineTo(m.l, m.t + ph);
+      ctx.lineTo(m.l + pw, m.t + ph);
+      ctx.stroke();
+
+      const zeroY = yp(0);
+      if(zeroY >= m.t && zeroY <= m.t + ph){
+        ctx.save();
+        ctx.setLineDash([5,5]);
+        ctx.strokeStyle = "#b7c4d8";
+        ctx.beginPath();
+        ctx.moveTo(m.l, zeroY);
+        ctx.lineTo(m.l + pw, zeroY);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSeries(vals, color){
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        vals.forEach((v,i)=>{
+          const x = xp(xVals[i]);
+          const y = yp(v);
+          if(i===0) ctx.moveTo(x,y);
+          else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+
+        vals.forEach((v,i)=>{
+          const x = xp(xVals[i]);
+          const y = yp(v);
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.arc(x,y,3.5,0,Math.PI*2);
+          ctx.fill();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+      }
+
+      drawSeries(rawVals, "#9ca3af");
+      drawSeries(corrVals, "#2563eb");
+
+      ctx.fillStyle = "#526078";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      for(let i=0;i<=4;i++){
+        const v = maxY - (maxY - minY) * i / 4;
+        const y = m.t + ph * i / 4;
+        ctx.fillText(r3(v), m.l - 8, y);
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      const ticks = Math.min(5, xVals.length - 1);
+
+      for(let i=0;i<=ticks;i++){
+        const t = minX + ((maxX - minX) / (ticks || 1)) * i;
+        ctx.fillText(r3(t), xp(t), m.t + ph + 10);
+      }
+    }
+
+    function resetAll(){
+      try{
+        localStorage.removeItem("straightness_app_state");
+      }catch(e){}
+
+      state.pitch = "";
+      state.count = "";
+      state.method = "endpoint";
+      state.slopes = [];
+      state.result = null;
+
+      applyStateToInputs();
+      slopeList.innerHTML = "";
+      tableBody.innerHTML = "";
+      show(screen1);
+      toast("初期化しました");
+    }
+
+    $("methodEndpoint").addEventListener("click", ()=>{
+      state.method = "endpoint";
+      syncMethodButtons();
+      saveLocal();
+    });
+
+    $("methodLS").addEventListener("click", ()=>{
+      state.method = "leastSquares";
+      syncMethodButtons();
+      saveLocal();
+    });
+
+    $("goInput").addEventListener("click", ()=>{
+      if(!validateConditions()) return;
+
+      state.pitch = normalizeNumberString(pitch.value, false);
+      state.count = String(parseSafeNumber(count.value, true));
+
+      pitch.value = state.pitch;
+      count.value = state.count;
+
+      buildSlopeInputs();
+      show(screen2);
+    });
+
+    $("back1").addEventListener("click", ()=>show(screen1));
+    $("back2").addEventListener("click", ()=>show(screen2));
+    $("calcBtn").addEventListener("click", calculate);
+    $("recalcBtn").addEventListener("click", calculate);
+
+    $("fillZero").addEventListener("click", ()=>{
+      const c = parseSafeNumber(state.count, true);
+      state.slopes = Array.from({length:c}, ()=>"0");
+      buildSlopeInputs();
+    });
+
+    $("clearVals").addEventListener("click", ()=>{
+      const c = parseSafeNumber(state.count, true);
+      state.slopes = Array.from({length:c}, ()=>"");
+      buildSlopeInputs();
+    });
+
+    $("resetBtn").addEventListener("click", resetAll);
+
+    window.addEventListener("resize", ()=>{
+      if(state.result){
+        drawChart(chart, state.result.x, state.result.raw, state.result.corrected);
+      }
+    });
+
+    loadLocal();
+    applyStateToInputs();
+
+    if(state.pitch && state.count){
+      buildSlopeInputs();
+    }
+  </script>
+</body>
+</html>
